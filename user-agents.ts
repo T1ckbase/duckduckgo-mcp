@@ -7,6 +7,7 @@ const res = await fetch(
 if (!res.ok) throw new Error(`Failed to fetch device descriptors: ${res.status}`);
 const devices = (await res.json()) as DeviceDescriptorsSource;
 const userAgents = Object.values(devices).map((device) => device.userAgent);
+if (!userAgents.length) throw new Error('No user agents found in device descriptors');
 
 export function getUserAgents() {
   return userAgents;
