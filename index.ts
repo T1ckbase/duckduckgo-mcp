@@ -3,6 +3,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { retry } from '@std/async/retry';
+import { TtlCache } from '@std/cache/ttl-cache';
 import { z } from 'zod/v4';
 
 import pkg from './package.json' with { type: 'json' };
@@ -12,6 +13,8 @@ import { getUserAgents } from './user-agents.ts' with { type: 'macro' };
 // https://github.com/oven-sh/bun/pull/26363
 const USER_AGENTS = getUserAgents(); // workaround
 const userAgents = USER_AGENTS;
+
+const searchCache = new TtlCache<string, Result[]>(3 * 60 * 1000);
 
 export interface Result {
   title: string;
@@ -87,7 +90,7 @@ if (import.meta.main) {
         'Search DuckDuckGo HTML results and return title, URL, and snippet. Use when higher-quality tools are unavailable.',
       inputSchema: z.object({
         query: z.string().describe('Search query string.'),
-        max_results: z.int().positive().max(15).default(5).describe('Maximum number of results to return.'),
+        max_results: z.int().positive().max(15).default(5).describe('Maximum number of results to return. (1-15)'),
       }),
       outputSchema: z.object({
         results: z.array(
@@ -101,23 +104,31 @@ if (import.meta.main) {
     },
     async ({ query, max_results }) => {
       try {
-        const results = await retry(() => search(query), {
-          maxAttempts: 3,
-          minTimeout: 2000,
-          multiplier: 2,
-          isRetriable: (err) => {
-            if (err instanceof Error) {
-              return !err.message.includes('No Results');
-            }
-            return false;
-          },
-        });
+        let results: Result[];
 
-        if (results.length > max_results) results.length = max_results;
+        if (searchCache.has(query)) {
+          results = searchCache.get(query)!;
+        } else {
+          results = await retry(() => search(query), {
+            maxAttempts: 3,
+            minTimeout: 2000,
+            multiplier: 2,
+            isRetriable: (err) => {
+              if (err instanceof Error) {
+                return !err.message.includes('No Results');
+              }
+              return false;
+            },
+          });
+
+          searchCache.set(query, results);
+        }
+
+        const slicedResults = results.slice(0, max_results);
 
         return {
-          content: [{ type: 'text' as const, text: JSON.stringify(results) }],
-          structuredContent: { results },
+          content: [{ type: 'text' as const, text: JSON.stringify(slicedResults) }],
+          structuredContent: { results: slicedResults },
         };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
