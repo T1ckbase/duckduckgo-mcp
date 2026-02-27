@@ -36,6 +36,11 @@ export async function search(query: string) {
   const results: Result[] = [];
 
   const transformedRes = new HTMLRewriter()
+    .on('.no-results', {
+      element() {
+        throw new Error('No Results');
+      },
+    })
     .on('.challenge-form', {
       element() {
         throw new Error('Too many requests (Bot detected)');
@@ -100,6 +105,12 @@ if (import.meta.main) {
           maxAttempts: 3,
           minTimeout: 2000,
           multiplier: 2,
+          isRetriable: (err) => {
+            if (err instanceof Error) {
+              return !err.message.includes('No Results');
+            }
+            return false;
+          },
         });
 
         if (results.length > max_results) results.length = max_results;
