@@ -2,15 +2,38 @@
   "$schema": "http://json.schemastore.org/package.json",
   "name": "duckduckgo-mcp",
   "version": "0.1.0",
-  "private": true,
+  "description": "A MCP server for DuckDuckGo HTML search.",
+  "keywords": [
+    "ai",
+    "duckduckgo",
+    "mcp",
+    "modelcontextprotocol",
+    "websearch"
+  ],
+  "bugs": {
+    "url": "https://github.com/T1ckbase/duckduckgo-mcp/issues"
+  },
+  "license": "ISC",
+  "author": "t1ckbase",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/T1ckbase/duckduckgo-mcp.git"
+  },
   "bin": "./out/index.js",
+  "files": [
+    "out"
+  ],
   "type": "module",
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "typecheck": "tsgo --noEmit",
     "lint": "oxlint",
     "format": "oxfmt",
-    "build": "bun build ./index.ts --outdir ./out --sourcemap=linked --minify --external @modelcontextprotocol/sdk --external zod --metafile-md=./out/meta.md"
+    "build": "bun build ./index.ts --outdir ./out --sourcemap=linked --minify --external @modelcontextprotocol/sdk --external zod --metafile-md=./out/meta.md",
+    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
