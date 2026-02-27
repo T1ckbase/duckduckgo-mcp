@@ -1,5 +1,7 @@
 # DuckDuckGo MCP
 
+[![NPM Version](https://img.shields.io/npm/v/duckduckgo-mcp.svg?logo=npm)](https://www.npmjs.com/package/duckduckgo-mcp)
+
 A MCP server for DuckDuckGo HTML search.
 
 ## Features
