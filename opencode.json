@@ -4,7 +4,7 @@
     "duckduckgo": {
       "enabled": true,
       "type": "local",
-      "command": ["bun", "index.ts"]
+      "command": ["bun", "./out/index.js"]
     }
   }
 }

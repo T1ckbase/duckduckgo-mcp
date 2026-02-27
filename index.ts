@@ -2,13 +2,16 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { retry } from '@std/async/retry';
 import { z } from 'zod/v4';
 
 import pkg from './package.json' with { type: 'json' };
 import { getUserAgents } from './user-agents.ts' with { type: 'macro' };
 
-const USER_AGENTS = getUserAgents();
-const userAgents = USER_AGENTS; // Reduce bundle size
+// https://github.com/oven-sh/bun/issues/26362
+// https://github.com/oven-sh/bun/pull/26363
+const USER_AGENTS = getUserAgents(); // workaround
+const userAgents = USER_AGENTS;
 
 export interface Result {
   title: string;
@@ -25,6 +28,7 @@ export async function search(query: string) {
     method: 'POST',
     headers: { 'User-Agent': userAgent },
     body: formData,
+    signal: AbortSignal.timeout(8000),
   });
 
   if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
@@ -75,10 +79,10 @@ if (import.meta.main) {
     {
       title: 'DuckDuckGo search',
       description:
-        'Search DuckDuckGo HTML results and return title, URL, and snippet. Only use this if there are no other better web search tools available.',
+        'Search DuckDuckGo HTML results and return title, URL, and snippet. Use when higher-quality tools are unavailable.',
       inputSchema: z.object({
         query: z.string().describe('Search query string.'),
-        max_results: z.int().positive().default(5).describe('Maximum number of results to return.'),
+        max_results: z.int().positive().max(15).default(5).describe('Maximum number of results to return.'),
       }),
       outputSchema: z.object({
         results: z.array(
@@ -91,19 +95,27 @@ if (import.meta.main) {
       }),
     },
     async ({ query, max_results }) => {
-      const results = await search(query);
-      if (results.length > max_results) results.length = max_results;
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: JSON.stringify(results),
-          },
-        ],
-        structuredContent: {
-          results,
-        },
-      };
+      try {
+        const results = await retry(() => search(query), {
+          maxAttempts: 3,
+          minTimeout: 2000,
+          multiplier: 2,
+        });
+
+        if (results.length > max_results) results.length = max_results;
+
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify(results) }],
+          structuredContent: { results },
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`[duckduckgo] Search failed after retries: ${errorMessage}`);
+        return {
+          content: [{ type: 'text' as const, text: `Search failed: ${errorMessage}` }],
+          isError: true,
+        };
+      }
     },
   );
 
