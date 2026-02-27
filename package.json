@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json.schemastore.org/package.json",
+  "name": "duckduckgo-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "bin": "./out/index.js",
+  "type": "module",
+  "sideEffects": false,
+  "module": "index.ts",
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "format": "oxfmt",
+    "build": "bun build ./index.ts --outdir ./out --sourcemap=linked --minify --external @modelcontextprotocol/sdk --external zod --metafile-md=./out/meta.md"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript/native-preview": "^7.0.0-dev.20260226.1",
+    "oxfmt": "^0.35.0",
+    "oxlint": "^1.50.0",
+    "typescript": "^5.9.3"
+  }
+}
