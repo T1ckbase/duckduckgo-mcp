@@ -1,7 +1,7 @@
 {
   "$schema": "http://json.schemastore.org/package.json",
   "name": "duckduckgo-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A MCP server for DuckDuckGo HTML search.",
   "keywords": [
     "ai",
@@ -10,6 +10,7 @@
     "modelcontextprotocol",
     "websearch"
   ],
+  "homepage": "https://github.com/T1ckbase/duckduckgo-mcp#readme",
   "bugs": {
     "url": "https://github.com/T1ckbase/duckduckgo-mcp/issues"
   },
