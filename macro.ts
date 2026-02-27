@@ -1,3 +1,5 @@
+import pkg from './package.json' with { type: 'json' };
+
 type DeviceDescriptorsSource = Record<string, { userAgent: string }>;
 
 const res = await fetch(
@@ -11,4 +13,8 @@ if (!userAgents.length) throw new Error('No user agents found in device descript
 
 export function getUserAgents() {
   return userAgents;
+}
+
+export function getVersion() {
+  return pkg.version;
 }

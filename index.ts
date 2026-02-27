@@ -6,8 +6,7 @@ import { retry } from '@std/async/retry';
 import { TtlCache } from '@std/cache/ttl-cache';
 import { z } from 'zod/v4';
 
-import pkg from './package.json' with { type: 'json' };
-import { getUserAgents } from './user-agents.ts' with { type: 'macro' };
+import { getUserAgents, getVersion } from './macro.ts' with { type: 'macro' };
 
 // https://github.com/oven-sh/bun/issues/26362
 // https://github.com/oven-sh/bun/pull/26363
@@ -79,15 +78,14 @@ export async function search(query: string) {
 if (import.meta.main) {
   const server = new McpServer({
     name: 'duckduckgo',
-    version: pkg.version,
+    version: getVersion(),
   });
 
   server.registerTool(
     'search',
     {
-      title: 'DuckDuckGo search',
       description:
-        'Search DuckDuckGo HTML results and return title, URL, and snippet. Use when higher-quality tools are unavailable.',
+        'Search DuckDuckGo HTML results and return title, URL, and snippet. Use when higher-quality websearch tools are unavailable.',
       inputSchema: z.object({
         query: z.string().describe('Search query string.'),
         max_results: z.int().positive().max(15).default(5).describe('Maximum number of results to return. (1-15)'),
