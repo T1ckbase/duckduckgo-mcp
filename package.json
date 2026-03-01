@@ -36,7 +36,6 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "build": "bun build ./index.ts --outdir ./out --sourcemap=linked --minify --external @modelcontextprotocol/sdk --external zod --metafile-md=./out/meta.md",
-    "prepublishOnly": "bun run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
